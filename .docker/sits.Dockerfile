@@ -1,4 +1,4 @@
-FROM ghcr.io/osgeo/gdal:ubuntu-full-latest
+FROM ghcr.io/osgeo/gdal:ubuntu-small-latest
 
 LABEL maintainer="Florian Katerndahl <florian@katerndahl.com>"
 LABEL version="latest"
@@ -11,7 +11,7 @@ WORKDIR /usr/src
 
 RUN apt update && \
     apt upgrade -y && \
-    apt install -y bc python3-pip jq git
+    apt install -y bc python3-pip jq git wget nfs-common
 
 # courtesy of https://github.com/davidfrantz/base_image/blob/fab4748fe6d017788b7e5aa109266791838afb37/Dockerfile
 RUN groupadd docker && \
@@ -26,8 +26,7 @@ ENV PATH="${PATH}:/home/docker/.local/bin/"
 USER docker
 
 RUN wget -O install.py https://install.python-poetry.org && \
-    python3 install.py && \
-    rm install.py
+    python3 install.py
 
 RUN git clone https://github.com/Florian-Katerndahl/SITS-NN-Classification.git sits && \
     cd sits && \
@@ -38,5 +37,18 @@ RUN git clone https://github.com/Florian-Katerndahl/SITS-NN-Classification.git s
 WORKDIR ${HOME}
 
 RUN pip install /usr/src/sits/dist/sits_classification-0.1.0-py3-none-any.whl
+
+RUN rm -rf /usr/src/sits && \
+    python3 /usr/src/install.py --uninstall && \
+    rm /usr/src/install.py && \
+    rm -rf .cache/*
+
+USER root
+
+RUN apt purge -y python3-pip && \
+    apt autoremove -y && \
+    apt clean
+
+USER docker
 
 CMD [ "bash" ]

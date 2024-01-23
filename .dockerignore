@@ -1,0 +1,7 @@
+kubernetes/
+workflows/
+.vscode/
+.git/
+
+README.md
+.gitignore
