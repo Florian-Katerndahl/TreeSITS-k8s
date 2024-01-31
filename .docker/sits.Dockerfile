@@ -34,6 +34,13 @@ RUN git clone https://github.com/Florian-Katerndahl/SITS-NN-Classification.git s
     poetry lock && \
     poetry build
 
+RUN mkdir ${HOME}/python-scripts && \
+    cp /usr/src/sits/apps/*.py ${HOME}/python-scripts && \
+    chmod +x ${HOME}/python-scripts/*.py
+
+ENV PATH="${PATH}:/home/docker/python-scripts"
+ENV PYTHONPATH="{PYTHONPATH}:/home/docker/python-scripts"
+
 WORKDIR ${HOME}
 
 RUN pip install /usr/src/sits/dist/sits_classification-0.1.0-py3-none-any.whl
