@@ -30,4 +30,6 @@ RUN chgrp -R docker /home/docker/nextflow && \
 ENV PATH="${PATH}:/home/docker"
 USER docker
 
+COPY workflows /home/docker/workflows
+
 RUN ["bash"]
