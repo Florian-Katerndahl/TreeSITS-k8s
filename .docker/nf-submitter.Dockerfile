@@ -9,7 +9,7 @@ ENV DEBIANFRONTEND=noninteractive
 
 RUN apt update && \
     apt upgrade -y && \
-    apt install -y openjdk-17-jre openjdk-17-jre-headless curl wget
+    apt install -y openjdk-17-jre openjdk-17-jre-headless curl wget graphviz
 
 # courtesy of https://github.com/davidfrantz/base_image/blob/fab4748fe6d017788b7e5aa109266791838afb37/Dockerfile
 RUN groupadd docker && \
