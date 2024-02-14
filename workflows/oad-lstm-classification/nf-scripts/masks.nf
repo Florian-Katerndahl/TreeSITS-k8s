@@ -1,9 +1,6 @@
 nextflow.enable.dsl=2
 
-process BBOX {
-  cpus 1
-  container 'floriankaterndahl/cpu-inference:0.0.1'
-  
+process BBOX {  
   input:
   path AOI
   
@@ -23,9 +20,6 @@ process BBOX {
 }
 
 process CUBE {
-  cpus 2
-  container 'davidfrantz/force:latest'
-
   input:
   tuple path(inTile), path(datacube)
   
@@ -39,8 +33,6 @@ process CUBE {
 }
 
 process BINMASK {
-  cpus 1
-  container 'floriankaterndahl/cpu-inference:0.0.1'
   publishDir "Eolab/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
 
   input:

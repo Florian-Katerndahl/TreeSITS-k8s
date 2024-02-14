@@ -1,9 +1,6 @@
 nextflow.enable.dsl=2
 
 process INFERENCE {
-  cpus 8
-  //memory '40GB' ONLY POSSIBLE WITH SWAP ENABLED
-  container 'floriankaterndahl/cpu-inference:0.0.1'
   publishDir "Eolab/data", mode: 'copy', overwrite: true, pattern: "${tileID}.tif"
 
   input:
@@ -23,8 +20,6 @@ process INFERENCE {
 }
 
 process VRT {
-  cpus 8
-  container 'floriankaterndahl/cpu-inference:0.0.1'
   publishDir "Eolab/data", mode: 'copy', overwrite: true, pattern: "inference.vrt"
 
   input:
