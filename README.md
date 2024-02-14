@@ -215,3 +215,5 @@ To download files or directoires use `kubectl cp`. I.e., to download the output 
 mkdir output
 kubectl cp default/staging-pod:/output output/
 ```
+
+If AWS S3 buckets are used instead of volumes, mount the respective bucket locally using `s3fs` or access the files via the S3 API.
