@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: force-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: nfs.force.code-de.org
+    path: /exports/FORCE-C1-L2/FORCE/C1/L2/ard
+    readOnly: true
+  mountOptions:
+    - nfsvers=4.1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: indir
+spec:
+  resources:
+    requests:
+      storage: 192G
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: workdir
+spec:
+  resources:
+    requests:
+      storage: 200G
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: outdir
+spec:
+  resources:
+    requests:
+      storage: 64G
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: force
+spec:
+  resources:
+    requests:
+      storage: 1Mi # at least this large
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: force-pv
+  accessModes:
+    - ReadOnlyMany

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: staging-pod
+  labels:
+    purpose: staging
+spec:
+  securityContext:
+    runAsUser: 0
+  containers:
+  - name: staging
+    image: floriankaterndahl/sits:0.0.4-small
+    command:
+      - /bin/bash
+      - "-c"
+      - "sleep infinity"
+    volumeMounts:
+      - mountPath: /input
+        name: input
+      - mountPath: /work
+        name: work
+      - mountPath: /out
+        name: out
+      - mountPath: /force
+        name: force
+    resources:
+      limits:
+        memory: 28G
+        cpu: "2"
+        ephemeral-storage: 32G
+  volumes:
+    - name: input
+      persistentVolumeClaim:
+        claimName: indir
+    - name: work
+      persistentVolumeClaim:
+        claimName: workdir
+    - name: out
+      persistentVolumeClaim:
+        claimName: outdir
+    - name: force
+      persistentVolumeClaim:
+        claimName: force
+        readOnly: true
