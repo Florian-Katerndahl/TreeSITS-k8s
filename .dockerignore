@@ -2,6 +2,7 @@ kubernetes/
 work/
 .vscode/
 .git/
+wf-inputs/
 
 README.md
 .gitignore
