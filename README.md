@@ -51,15 +51,15 @@ source cloud_xxxx/xxx-openrc.sh
 
 The cluster definition below applies to the workflows described here. It's subject to frequent changes and may be outdated. The master node is intentionally assigned a lower-spec Vm flavor as no data processing is done here.
 
-:exclamation: Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quoatas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
+:exclamation: Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quotas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
 
 ```bash
  openstack coe cluster create \
     --cluster-template k8s-1.23.16-v1.0.3 \
     --keypair <name-of-previously-generated-keypair> \
-    --master-count 2 --master-flavor eo1.large \ 
+    --master-count 1 --master-flavor eo1.large \ 
     --node-count 7 --flavor hm.2xlarge \
-    --labels eodata_access_enabled=true,min_node_count=1,max_node_count=7,auto_healing_enabled=true,auto_scaling_enabled=true,etcd_volume_type='__DEFAULT__' --merge-labels \
+    --labels eodata_access_enabled=true,min_node_count=1,max_node_count=7,auto_healing_enabled=true,auto_scaling_enabled=false,etcd_volume_type='__DEFAULT__' --merge-labels \
     --master-lb-enabled \
     <cluster-name>
 ```
@@ -152,7 +152,7 @@ kubectl apply -f kubernetes/staging-pod.yml
 
 Any additional data used as input to the workflow must be made accessible for containers running inside the cluster prior to execution. While the FORCE Community-Cube is mounted as a NFS-share, data such as a vector database used to query the AOI must be uploaded manually. To do so, use the `kubectl cp` command. Any subdirectories referenced need to exist and the user within a container needs to have write access to the chosen directory. Exemplary use is shown below.
 
-:warning: can be done without `kubectl cp` when using S3 Object storage as it'S available from outside the cluster! :warning:
+:warning: can be done without `kubectl cp` when using S3 Object storage as it's available from outside the cluster! :warning:
 
 ```bash
 kubectl cp germany-subset.gpkg default/staging-pod:/input/aoi
@@ -204,7 +204,7 @@ To start a workflow from within the cluster, i.e. using a so-called *submitter p
 
 ```bash
 kubectl apply -f kubernetes/nf-submitter-pod.yml
-kubectly exec -t pods/nf-submitter -- nextflow run -c workflows/oad-lstm-classification/nextflow.config workflows/oad-lst-classification/main.nf
+kubectl exec -t pods/nf-submitter -- nextflow run -c workflows/oad-lstm-classification/nextflow.config workflows/oad-lst-classification/main.nf
 ```
 
 ## Get Results off of your Cluster
