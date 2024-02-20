@@ -6,3 +6,6 @@ wf-inputs/
 
 README.md
 .gitignore
+*.html
+*.png
+.nextflow.log*
