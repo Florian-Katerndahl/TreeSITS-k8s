@@ -33,7 +33,7 @@ process CUBE {
 }
 
 process BINMASK {
-  publishDir "Eolab/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
+  publishDir "s3://outdir/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
 
   input:
   path tiledir

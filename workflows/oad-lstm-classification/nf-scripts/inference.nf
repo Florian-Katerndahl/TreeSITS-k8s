@@ -1,7 +1,7 @@
 nextflow.enable.dsl=2
 
 process INFERENCE {
-  publishDir "Eolab/data", mode: 'copy', overwrite: true, pattern: "${tileID}.tif"
+  publishDir "s3://outdir/data", mode: 'copy', overwrite: true, pattern: "${tileID}.tif"
 
   input:
   tuple val(tileID), path(scenes), path(mask), path(model)
@@ -20,7 +20,7 @@ process INFERENCE {
 }
 
 process VRT {
-  publishDir "Eolab/data", mode: 'copy', overwrite: true, pattern: "inference.vrt"
+  publishDir "s3://outdir/data", mode: 'copy', overwrite: true, pattern: "inference.vrt"
 
   input:
   path(predictions)
