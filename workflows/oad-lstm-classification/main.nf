@@ -22,6 +22,9 @@ def worldcoverTiles = { inarr ->
 }
 
 def filterTile = { inarr ->
+    /* starting with 1 is correct as first array element is file path while all following 
+     * are ESA worldcover extends to check against.
+     */
     for (i in 1..inarr.size() - 1) {
         if (inarr[0].baseName.contains(inarr[i]))
             return true;
