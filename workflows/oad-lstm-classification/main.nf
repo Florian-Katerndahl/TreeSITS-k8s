@@ -44,7 +44,7 @@ workflow {
         | flatten
         | BINMASK
 
-    inference_ch = Channel.fromPath(params.cube_files, type: 'dir')
+    inference_ch = Channel.fromPath(params.input_cube, type: 'dir')
         | map { it -> [it.toString().tokenize('/')[-1], it] }
         | join(mask_ch, by: 0, failOnDuplicate: true, remainder: false)
         | map { it -> [it[0], it[1].listFiles(), it[2]] }

@@ -20,6 +20,8 @@ process BBOX {
 }
 
 process CUBE {
+  label 'maxCPU'
+  
   input:
   tuple path(inTile), path(datacube)
   
