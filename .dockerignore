@@ -3,6 +3,10 @@ work/
 .vscode/
 .git/
 wf-inputs/
+wf-outputs/
+7cpus/
+aws-s3/
+kill/
 
 README.md
 .gitignore

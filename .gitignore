@@ -2,6 +2,10 @@
 work/
 .nextflow/
 wf-inputs/
+wf-outputs/
+7cpus/
+kill/
+no-scratch/
 
 *.html
 *.png
