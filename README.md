@@ -126,7 +126,13 @@ The filesystem used by containers is ephemeral by default. Thus, any changes suc
 kubectl apply -f kubernetes/volumes.yml
 ```
 
+:warning: While three of the four volumes defined in this file are not used, it also contains the definition needed to use the FOCE Community Cube inside the cluster. Thus, the command above needs to be executed depending from where you execute the workflow (see below).
+
+##### AWS S3 Buckets
+
 Unfortunately, the current openstack implementation of CloudFerro does not seem to match the requirements for the above-mentioned configuration to work correctly. The only available storageClass `cinder-csi` generally allows all access modes supported by kubernetes (see [here](https://github.com/kubernetes/cloud-provider-openstack/issues/1367#issuecomment-761981909) and [the official documentation](https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/cinder-csi-plugin/features.md#multi-attach-volumes)). However, on EO-Lab infrastructure, [the only mode implemented](https://knowledgebase.eo-lab.org/en/latest/kubernetes/Persistent-Volumes-and-Persistent-Volume-Claims-on-EO-Lab-FRA1-1-Server.html?highlight=persistentvolumeclaim#types-of-cinder-csi-persistence) is `RWO`, i.e. *ReadWriteOnce*. Thus, only a single Pod can access a PVC at a time. Alternatives are AWS S3 buckets, NFS-shares or using other external programs such as `rsync`. As storageClasses form the basis of all volumes inside kubernetes, using volumes provided by EO-Lab is currently not a viable option. As an alternative, EO-Lab suggests (among others) the use of AWS S3 storage buckets. As these are managed not by the kubernetes API-Server but by openstack, most of the definitions inside `kubernetes/volumes.yml` are not applicable anymore. Potential other solutions are discussed [here](https://forum.code-de.org/de/forum/cloud-infrastruktur-iaas-8/topic/datenaustausch-zwischen-vms-74/).
+
+> :warning: NFS-shares are not discussed as they can only be shared by specifying all IPs which may request access or share with entire subnets. The former would also allow access to individual nodes from outside the cluster and is generally discouraged. The latter could not be implemented either due to resource exhaustion or lack of technical understanding on my side.
 
 The general proceeding is described in [EO-Lab's knowledge base](https://knowledgebase.eo-lab.org/en/latest/s3/How-to-mount-object-storage-container-as-a-file-system-in-Linux-using-s3fs-on-EO-Lab.html). First, three object storage containers are needed:
 
@@ -134,11 +140,32 @@ The general proceeding is described in [EO-Lab's knowledge base](https://knowled
 openstack container create indir outdir workdir
 ```
 
-To mount these containers locally, EC2 credentials are needed. Create them by executing the following command. The relevant parts are the `access` and `secret` fields. For more detailed instructions, see this [document](https://knowledgebase.eo-lab.org/en/latest/general/How-to-generate-ec2-credentials-on-EO-Lab.html).
+:warning: Using three seperate storage buckets may not be the most idiomatic usage strategy or hurt performance. This was not investigated further.
+
+To allow access to these storage buckets or mount them locally, EC2 credentials are needed. Create them by executing the following command. For more detailed instructions, see this [document](https://knowledgebase.eo-lab.org/en/latest/general/How-to-generate-ec2-credentials-on-EO-Lab.html).
 
 ```bash
 openstack ec2 credentials create
+
+# list credentials by running
+# openstack ec2 credentials list
 ```
+
+Using `s3cmd`, access to these storage buckets can be granted. First configure `s3cmd` with the previously generated credentials, a detailed tutorial can be found [here](https://knowledgebase.eo-lab.org/en/latest/s3/How-to-access-private-object-storage-using-S3cmd-or-boto3-on-EO-Lab.html).
+
+```bash
+s3cmd --configure
+```
+
+Afterwards, apply the IAM-roles in the `aws-s3` directory which allows external tools to access the S3 bucktes.
+
+```bash
+s3cmd setpolicy kubernetes/nextflow-jail-indir.json s3://indir
+s3cmd setpolicy kubernetes/nextflow-jail-workdir.json s3://workdir
+s3cmd setpolicy kubernetes/nextflow-jail-outdir.json s3://outdir
+```
+
+Using the S3 buckets from within Nextflow necessitates setting parameters inside the Nextflow config. See the `aws` and `fusion` scopes of `workflows/oad-lstm-classification/nextflow.config` for a concrete implementation.
 
 #### Submit Naked Pods
 
@@ -159,6 +186,21 @@ kubectl cp germany-subset.gpkg default/staging-pod:/input/aoi
 kubectl cp lstmv-v1.pkl default/staging-pod:/input/models
 ```
 
+#### AWS S3 Buckets
+
+To ingest data into the input storage bucket created above, mount the respective bucket locally with `s3fs`. A detailed description is provided by CloudFerro/EoLab [here](https://knowledgebase.eo-lab.org/en/latest/s3/How-to-mount-object-storage-container-as-a-file-system-in-Linux-using-s3fs-on-EO-Lab.html). An example is shown below.
+
+```bash
+sudo sed -i -e '/user_allow_other$/ s/#//' /etc/fuse.conf
+mkdir wf-inputs
+s3fs indir wf-inputs -o passwd_file=~/.passwd-s3fs -o url=https://cloud.fra1-1.cloudferro.com:8080 -o use_path_request_style -o umask=0002 -o allow_other
+
+# Copy ESA Worldcover to S3 bucket
+cp -r /code/auxdata/esa-worldcover-2020/ wf-inputs/
+```
+
+:heavy_exclamation_mark: USe S3 bucktes with nextflow by prefixing all paths with `s3://<bucket>`.
+
 ## Start a Workflow
 
 ### Implemented Workflows
@@ -166,6 +208,8 @@ kubectl cp lstmv-v1.pkl default/staging-pod:/input/models
 #### One-And-Done Tree Species Classification Using LSTM-Models
 
 The original tree species classification workflow is presented in [this GitHub repository](https://github.com/JKfuberlin/SITS-NN-Classification). The Nextflow implementation currently focuses on inference only and disregards creation of training data and model training. All related files are inside `workflows/oad-lstm-classification`.
+
+The model used was only trained for a couple of epochs and thus produces nonsensical results. Nonetheless, it was used for workflow and cluster development/set up as it was the first one being *done*.
 
 #### One-And-Done Tree Species Classification Using Transformer-Models
 
@@ -182,21 +226,27 @@ Workflows can be executed both from within the cluster and outside of it.
 
 #### Execute from Outside of the Cluster
 
-- `kuberun` is said to be unstable (see Links above) and did not work during testing
+There exist two possiblities to start the workflow from outside the cluster using the command line. However, during workflow development, using `kuberun` unexpectedly did not work. If this is realted to the project structure is currently unclear (to me). Thus, `kuberun` was disregarded.
 
 ##### `kuberun`
 
 ```bash
-# WARUM geht das nicht???
+# Does not work
 # WARN: Cannot read project manifest -- Cause: Remote resource not found: https://api.github.com/repos/Florian-Katerndahl/TreeSITS-k8s/contents/nextflow.config
 # Remote resource not found: https://api.github.com/repos/Florian-Katerndahl/TreeSITS-k8s/contents/main.nf
-# Ist das related? https://github.com/nextflow-io/nextflow/issues/1050
+# related? https://github.com/nextflow-io/nextflow/issues/1050
 nextflow kuberun -main-script workflows/oad-lstm-classification/main.nf -c workflows/oad-lstm-classification/nextflow.config https://github.com/Florian-Katerndahl/TreeSITS-k8s
 ```
 
-##### Let Nextflow figure everything out
+##### Leveraging the kubernetes context
 
-- Users launch their pipeline from the command line via nextflow run, and Nextflow uses the user’s Kubernetes config file (normally located at ~/.kube/config) to access the cluster.
+If the kubernetes context is specified in the `nextflow.config` file, and you set up your cluster to be adadministrable via `kubectl`, you can start the workflow as if it was local. For this to work, your Kubernetes config file likely must be located at  `~/.kube/config`. To get your kubernetes context, run `kubectl config get-contexts` and use the `NAME` column in your Nextflow configuration file -- in case you only manage a single cluster on EO-Lab it's likely your context is simply called "default". Afterwards, simply run the follwoing command - assuming your AWS EC2 credentials are stored in a file called `AWS.env`. Please note, that all file paths not indicating a cloud storage provider are resolved locally. Thus, the computer you start the workflow from needs access to a FORCE data cube.
+
+```bash
+source AWS.env
+AWS_ACCESS_KEY=$AWS_ACCESS_KEY AWS_SECRET_KEY=$AWS_SECRET_KEY \ 
+    nextflow run -c workflows/oad-lstm-classification/nextflow.config workflows/oad-lst-classification/main.nf -work-dir s3://workdir -resume
+```
 
 #### Execute from witihn the Cluster
 
@@ -204,7 +254,8 @@ To start a workflow from within the cluster, i.e. using a so-called *submitter p
 
 ```bash
 kubectl apply -f kubernetes/nf-submitter-pod.yml
-kubectl exec -t pods/nf-submitter -- nextflow run -c workflows/oad-lstm-classification/nextflow.config workflows/oad-lst-classification/main.nf
+kubectl exec -t pods/nf-submitter -- AWS_ACCESS_KEY="<previously created ec2 credential access>" AWS_SECRET_KEY="<previously created ec2 credential secret>" \
+    nextflow run -c workflows/oad-lstm-classification/nextflow.config workflows/oad-lst-classification/main.nf
 ```
 
 ## Get Results off of your Cluster
@@ -216,4 +267,4 @@ mkdir output
 kubectl cp default/staging-pod:/output output/
 ```
 
-If AWS S3 buckets are used instead of volumes, mount the respective bucket locally using `s3fs` or access the files via the S3 API.
+If AWS S3 buckets are used instead of volumes, mount the respective bucket locally using `s3fs` as described above or access the files via the S3 API. **Alternatively, you can specify a local directory!** Thus, starting the workflow from outside the cluster would automatically download all results to your machine.
