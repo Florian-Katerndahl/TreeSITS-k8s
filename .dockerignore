@@ -4,6 +4,7 @@ work/
 .git/
 wf-inputs/
 wf-outputs/
+wf-meta/
 7cpus/
 aws-s3/
 kill/

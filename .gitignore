@@ -3,6 +3,7 @@ work/
 .nextflow/
 wf-inputs/
 wf-outputs/
+wf-meta/
 7cpus/
 kill/
 no-scratch/
