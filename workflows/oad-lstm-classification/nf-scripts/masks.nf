@@ -21,6 +21,7 @@ process BBOX {
 
 process CUBE {
   label 'maxCPU'
+  label 'force'
   
   input:
   tuple path(inTile), path(datacube)
