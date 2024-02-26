@@ -13,4 +13,8 @@ README.md
 *.html
 *.png
 .nextflow.log*
+.nextflow.pid
 AWS.env
+con.md
+nextflow-with-fusion-and-wave.md
+notes
