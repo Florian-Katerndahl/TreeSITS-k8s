@@ -36,7 +36,7 @@ process CUBE {
 }
 
 process BINMASK {
-  publishDir "s3://outdir/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
+  publishDir "s3://outdir/${k8s.name}/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
 
   input:
   path tiledir
