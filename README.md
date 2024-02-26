@@ -39,7 +39,7 @@ Refer to the following pages in EO-Labs documentation:
 
 Note, that instead of executing the supplied OpenStack-RC file, it needs to be executed in the current shell, i.e. sourced. Otherwise, the environment variables will not be usable by programs run afterwards.
 
-:exclamation: You need to source this file everytime you create a new session (e.g. new terminal session, new ssh session, reboot, etc.).
+> :exclamation: You need to source this file everytime you create a new session (e.g. new terminal session, new ssh session, reboot, etc.).
 
 ```bash
 pip3 install python-openstackclient python-magnumclient lxml
@@ -51,7 +51,7 @@ source cloud_xxxx/xxx-openrc.sh
 
 The cluster definition below applies to the workflows described here. It's subject to frequent changes and may be outdated. The master node is intentionally assigned a lower-spec Vm flavor as no data processing is done here.
 
-:exclamation: Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quotas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
+> :exclamation: Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quotas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
 
 ```bash
  openstack coe cluster create \
@@ -126,7 +126,7 @@ The filesystem used by containers is ephemeral by default. Thus, any changes suc
 kubectl apply -f kubernetes/volumes.yml
 ```
 
-:warning: While three of the four volumes defined in this file are not used, it also contains the definition needed to use the FOCE Community Cube inside the cluster. Thus, the command above needs to be executed depending from where you execute the workflow (see below).
+> :warning: While three of the four volumes defined in this file are not used, it also contains the definition needed to use the FOCE Community Cube inside the cluster. Thus, the command above needs to be executed depending from where you execute the workflow (see below).
 
 ##### AWS S3 Buckets
 
@@ -140,7 +140,7 @@ The general proceeding is described in [EO-Lab's knowledge base](https://knowled
 openstack container create indir outdir workdir
 ```
 
-:warning: Using three seperate storage buckets may not be the most idiomatic usage strategy or hurt performance. This was not investigated further.
+> :warning: Using three seperate storage buckets may not be the most idiomatic usage strategy or hurt performance. This was not investigated further.
 
 To allow access to these storage buckets or mount them locally, EC2 credentials are needed. Create them by executing the following command. For more detailed instructions, see this [document](https://knowledgebase.eo-lab.org/en/latest/general/How-to-generate-ec2-credentials-on-EO-Lab.html).
 
@@ -179,8 +179,6 @@ kubectl apply -f kubernetes/staging-pod.yml
 
 Any additional data used as input to the workflow must be made accessible for containers running inside the cluster prior to execution. While the FORCE Community-Cube is mounted as a NFS-share, data such as a vector database used to query the AOI must be uploaded manually. To do so, use the `kubectl cp` command. Any subdirectories referenced need to exist and the user within a container needs to have write access to the chosen directory. Exemplary use is shown below.
 
-:warning: can be done without `kubectl cp` when using S3 Object storage as it's available from outside the cluster! :warning:
-
 ```bash
 kubectl cp germany-subset.gpkg default/staging-pod:/input/aoi
 kubectl cp lstmv-v1.pkl default/staging-pod:/input/models
@@ -199,7 +197,7 @@ s3fs indir wf-inputs -o passwd_file=~/.passwd-s3fs -o url=https://cloud.fra1-1.c
 cp -r /code/auxdata/esa-worldcover-2020/ wf-inputs/
 ```
 
-:heavy_exclamation_mark: USe S3 bucktes with nextflow by prefixing all paths with `s3://<bucket>`.
+> :heavy_exclamation_mark: Use S3 bucktes with nextflow by prefixing all paths with `s3://<bucket>`.
 
 ## Start a Workflow
 
