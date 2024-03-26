@@ -17,10 +17,6 @@ class forceTile {
         return false;
     }
 
-    def getTile() {
-        return this.inarr[0];
-    }
-
     def getAt(int index) {
         return this.inarr[index];
     }
