@@ -1,5 +1,3 @@
-nextflow.enable.dsl=2
-
 process INFERENCE {
   publishDir "s3://outdir/${k8s.name}/data", mode: 'copy', overwrite: true, pattern: "${tileID}.tif"
 

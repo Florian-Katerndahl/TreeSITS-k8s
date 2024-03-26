@@ -1,5 +1,3 @@
-nextflow.enable.dsl=2
-
 process BBOX {  
   input:
   path AOI

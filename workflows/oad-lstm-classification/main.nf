@@ -1,5 +1,3 @@
-nextflow.enable.dsl=2
-
 include { BBOX; CUBE; BINMASK } from './nf-scripts/masks.nf'
 include { INFERENCE; VRT } from './nf-scripts/inference.nf'
 
