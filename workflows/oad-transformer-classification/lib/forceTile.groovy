@@ -1,5 +1,6 @@
 class forceTile {
     LinkedList inarr;
+    String esaID;
 
     forceTile(LinkedList inarr) {
         this.inarr = inarr;
@@ -11,13 +12,19 @@ class forceTile {
      * are ESA worldcover extends to check against.
      */
         for (i in 1..this.inarr.size() - 1) {
-            if (this.inarr[0].baseName.contains(this.inarr[i]))
+            if (this.inarr[0].baseName.contains(this.inarr[i])) {
+                this.esaID = this.inarr[i] as String;
                 return true;
+            }
         }
         return false;
     }
 
     def getAt(int index) {
         return this.inarr[index];
+    }
+
+    String esaID() {
+        return this.esaID;
     }
 }
