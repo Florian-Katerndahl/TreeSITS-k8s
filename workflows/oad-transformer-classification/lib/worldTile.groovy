@@ -12,8 +12,8 @@ class worldTile {
         int minLongitude = this.inarr[0] as int;
         int maxLongitude = this.inarr[1] as int;
 
-        for (int latitude = minLatitude; latitude < maxLatitude; latitude+=3) {
-            for (int longitude = minLongitude; longitude < maxLongitude; longitude += 3) {
+        for (int latitude = minLatitude; latitude <= maxLatitude; latitude+=3) {
+            for (int longitude = minLongitude; longitude <= maxLongitude; longitude += 3) {
                 String latstr = latitude < 0 ? 'S' : 'N';
                 String lonstr = longitude < 0 ? 'W' : 'E';
 

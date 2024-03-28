@@ -1,4 +1,4 @@
-process BBOX {  
+process ALIGNED_BBOX {  
   input:
   path AOI
   
@@ -33,8 +33,6 @@ process CUBE {
 }
 
 process BINMASK {
-  // publishDir "${params.output}/masks/${tileID}", mode: 'copy', overwrite: true, pattern: "mask.tif"
-
   input:
   path(tiledir)
   
@@ -82,7 +80,7 @@ process DEDUPLICATION {
   else
     """
     mkdir merged
-    mv ${masks} merged/mask.tif
+    mv ${masks} mask.tif
     """
 }
 
@@ -94,14 +92,14 @@ workflow masking {
 
   main:
   bbox_ch = Channel.fromPath(bounding_box)
-    | BBOX
+    | ALIGNED_BBOX
     | map { it -> new worldTile(it) }
     | map { it.worldcoverTiles() }
     | collect
 
   mask_ch = Channel.fromPath(worldcover_tiles)
     | combine(bbox_ch)
-    | map { it -> new forceTile(it) }
+    | map { it -> new forceTile(it) }  // forceTile is not a good name. I'm still dealing with worldcover tiles!
     | filter { it.filterTile() }
     | map { [it[0], it.esaID()] }
     | combine(Channel.fromPath(proj_definition))
