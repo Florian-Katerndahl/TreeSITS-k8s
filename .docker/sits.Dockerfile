@@ -28,9 +28,8 @@ USER docker
 RUN wget -O install.py https://install.python-poetry.org && \
     python3 install.py
 
-RUN git clone https://github.com/Florian-Katerndahl/SITS-NN-Classification.git sits && \
+RUN git clone https://github.com/Florian-Katerndahl/SITST4TSC.git sits && \
     cd sits && \
-    mv .poetry/cpu-inference.toml pyproject.toml && \
     poetry lock && \
     poetry build
 
@@ -43,7 +42,7 @@ ENV PYTHONPATH="{PYTHONPATH}:/home/docker/python-scripts"
 
 WORKDIR ${HOME}
 
-RUN pip install /usr/src/sits/dist/sits_classification-0.1.0-py3-none-any.whl
+RUN pip install /usr/src/sits/dist/sits_classification*.whl
 
 RUN rm -rf /usr/src/sits && \
     python3 /usr/src/install.py --uninstall && \
