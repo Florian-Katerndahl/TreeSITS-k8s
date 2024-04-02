@@ -1,3 +1,4 @@
+// TODO convert structure to the one proposed by transformer workflow
 include { BBOX; CUBE; BINMASK } from './nf-scripts/masks.nf'
 include { INFERENCE; VRT } from './nf-scripts/inference.nf'
 
