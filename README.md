@@ -330,7 +330,7 @@ test-gpu-k8s-iqg4yblk2m55-node-0     [map[effect:NoSchedule key:node.cloudferro.
 
 If the taints are present, i.e. you don't get an empty list, you have to add tolerations in the config file for your script, otherwise your GPU application will not run:
 
-**Script:** `gpu-load-deployment.yaml`
+**Example mainfest:** `gpu-load-deployment.yaml`
 
 ```yaml
 apiVersion: apps/v1
