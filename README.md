@@ -266,3 +266,98 @@ kubectl cp default/staging-pod:/output output/
 ```
 
 If AWS S3 buckets are used instead of volumes, mount the respective bucket locally using `s3fs` as described above or access the files via the S3 API. **Alternatively, you can specify a local directory!** Thus, starting the workflow from outside the cluster would automatically download all results to your machine.
+
+
+
+## Running CUDA applications in Code-DE
+
+To run CUDA application in Code-DE, follow these steps:
+
+#### Create cluster with GPU support
+
+When creating a cluster in Code-DE, make sure to select the correct template, i.e. `k8s-1.23.16-vgpu-v1.0.0`. As a flavour of the worker node(s), select one that has a gpu, e.g. `vm.a6000.1`. The rest of the settings you can choose as you wish.
+
+Create the cluster. (It may take a while. If it fails, retry. Check also that enough GPUs are available.)
+
+#### Check the availability of the nvidia plugin
+
+Get the nodes with
+
+```
+kubectl get nodes
+```
+
+which will give you an output like this
+```
+NAME                                 STATUS   ROLES    AGE   VERSION
+test-gpu-k8s-iqg4yblk2m55-master-0   Ready    master   49m   v1.23.16
+test-gpu-k8s-iqg4yblk2m55-node-0     Ready    <none>   46m   v1.23.16
+
+```
+Check that the `nvidia-device-plugin` is available on the GPU node
+
+```
+kubectl describe node test-gpu-k8s-iqg4yblk2m55-node-0
+```
+If the following lines are present in the output, the plugin is avaliable and the GPUs can be used:
+```
+  Namespace                   Name                                                        CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                        ------------  ----------  ---------------  -------------  ---
+  nvidia-device-plugin        nvidia-device-plugin-gpu-feature-discovery-wnnhp            0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  nvidia-device-plugin        nvidia-device-plugin-node-feature-discovery-worker-v8t9x    0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  nvidia-device-plugin        nvidia-device-plugin-xhqf7                                  0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  
+  
+  Resource           Requests    Limits
+  --------           --------    ------
+  nvidia.com/gpu     0           0
+```
+
+#### Check for taints
+
+Check for taints on the nodes, especially on the GPU node:
+
+```
+kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints
+```
+
+This will give you a list of taints, for example:
+```
+NAME                                 TAINTS
+test-gpu-k8s-iqg4yblk2m55-master-0   [map[effect:NoSchedule key:node-role.kubernetes.io/master]]
+test-gpu-k8s-iqg4yblk2m55-node-0     [map[effect:NoSchedule key:node.cloudferro.com/type value:gpu]]
+```
+
+If the taints are present, i.e. you don't get an empty list, you have to add tolerations in the config file for your script, otherwise your GPU application will not run:
+
+**Example mainfest:** `gpu-load-deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-load-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-load
+  template:
+    metadata:
+      labels:
+        app: gpu-load
+    spec:
+      containers:
+      - name: gpu-load
+        image: <username>/gpu-load:latest
+        resources:
+          limits:
+            nvidia.com/gpu: 1 # Request one GPU
+          requests:
+            nvidia.com/gpu: 1
+      tolerations:
+        - key: "node.cloudferro.com/type"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+```
