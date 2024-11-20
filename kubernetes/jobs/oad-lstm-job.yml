@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: oad-lstm-job
+  annotations:
+    template: "https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/controllers/job.yaml"
+spec:
+  # the template section is identical to a standalone Pod-template, minus apiVersion and kind
+  # ttlSecondsAfterFinished: 180
+  template:
+    containers:
+    - name: nextflow
+      image: floriankaterndahl/lol:v413412312
+      command: ["nextflow"]
+      args:
+        - kuberun
+        - -resume
+        - https://github.com/Florian-Katerndahl/TreeSITS-k8s@HEAD:/workflows/oad-lstm/main.nf
+    restartPolicy: Never # can Nextflow tolerate this set to 'OnFailure' when an entire Pod is restarted? This would restart the entire workflow
+  backoffLimit: 2
+
