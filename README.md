@@ -39,7 +39,8 @@ Refer to the following pages in EO-Labs documentation:
 
 Note, that instead of executing the supplied OpenStack-RC file, it needs to be executed in the current shell, i.e. sourced. Otherwise, the environment variables will not be usable by programs run afterwards.
 
-> :exclamation: You need to source this file everytime you create a new session (e.g. new terminal session, new ssh session, reboot, etc.).
+> [!WARNING]
+> You need to source this file everytime you create a new session (e.g. new terminal session, new ssh session, reboot, etc.).
 
 ```bash
 pip3 install python-openstackclient python-magnumclient lxml
@@ -51,7 +52,8 @@ source cloud_xxxx/xxx-openrc.sh
 
 The cluster definition below applies to the workflows described here. It's subject to frequent changes and may be outdated. The master node is intentionally assigned a lower-spec Vm flavor as no data processing is done here.
 
-> :exclamation: Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quotas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
+> [!WARNING]
+> Depending on your wallet settings and approved compute quotas, certain VM flavors may or may not be available. This however, is seemingly not represented in the error messages. When resource quotas should not be exhausted by the queries while the error messages suggest over-usage of certain resource types (e.g. vCPU), you likely tried to use a flavor not available to you. If errors persist, contact the EO-Lab support team. Additionally, due to quirks of EO-Lab, you must manually set the `etcd_volume_type` to either `hdd` or `__DEFAULT__` except when you're a paying client of CODE-DE. Then, you can use the SSD volumes (but you'd need to pay for them nonetheless).
 
 ```bash
  openstack coe cluster create \
@@ -69,6 +71,9 @@ The cluster definition below applies to the workflows described here. It's subje
 Additional node groups can be added to the above-created cluster. They do not need to have the same host-image nor be the same compute flavor, i.e. this allows you to create a heterogenous compute environment.
 
 The command below adds 1 node with the `vm.a6000.4` flavor (8 CPUs, 80Gb disk space, 57Gb RAM, Nvidia A6000) with the `Ubuntu 22.04 NVIDIA_AI` image as the host operating system to the cluster `<cluster-name>`. This configuration allows the nodes belonging to the nodegroup `gpu` to automatically scale between 1 and 4 instances. All labels set when the cluster was originally created are merged (applied) with the ones of this new node group.
+
+> [!WARNING]
+> The addition of GPU-flavored VMs only works if the cluster template used supports GPUs. I.e. `k8s-1.23.16-vgpu-v1.0.0`.
 
 ```bash
 openstack coe nodegroup create \
@@ -126,13 +131,15 @@ The filesystem used by containers is ephemeral by default. Thus, any changes suc
 kubectl apply -f kubernetes/volumes.yml
 ```
 
-> :warning: While three of the four volumes defined in this file are not used, it also contains the definition needed to use the FOCE Community Cube inside the cluster. Thus, the command above needs to be executed depending from where you execute the workflow (see below).
+> [!NOTE]
+> While three of the four volumes defined in this file are not used, it also contains the definition needed to use the FORCE Community Cube inside the cluster. Thus, the command above needs to be executed depending from where you execute the workflow (see below).
 
 ##### AWS S3 Buckets
 
 Unfortunately, the current openstack implementation of CloudFerro does not seem to match the requirements for the above-mentioned configuration to work correctly. The only available storageClass `cinder-csi` generally allows all access modes supported by kubernetes (see [here](https://github.com/kubernetes/cloud-provider-openstack/issues/1367#issuecomment-761981909) and [the official documentation](https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/cinder-csi-plugin/features.md#multi-attach-volumes)). However, on EO-Lab infrastructure, [the only mode implemented](https://knowledgebase.eo-lab.org/en/latest/kubernetes/Persistent-Volumes-and-Persistent-Volume-Claims-on-EO-Lab-FRA1-1-Server.html?highlight=persistentvolumeclaim#types-of-cinder-csi-persistence) is `RWO`, i.e. *ReadWriteOnce*. Thus, only a single Pod can access a PVC at a time. Alternatives are AWS S3 buckets, NFS-shares or using other external programs such as `rsync`. As storageClasses form the basis of all volumes inside kubernetes, using volumes provided by EO-Lab is currently not a viable option. As an alternative, EO-Lab suggests (among others) the use of AWS S3 storage buckets. As these are managed not by the kubernetes API-Server but by openstack, most of the definitions inside `kubernetes/volumes.yml` are not applicable anymore. Potential other solutions are discussed [here](https://forum.code-de.org/de/forum/cloud-infrastruktur-iaas-8/topic/datenaustausch-zwischen-vms-74/).
 
-> :warning: NFS-shares are not discussed as they can only be shared by specifying all IPs which may request access or share with entire subnets. The former would also allow access to individual nodes from outside the cluster and is generally discouraged. The latter could not be implemented either due to resource exhaustion or lack of technical understanding on my side.
+> [!NOTE]
+> NFS-shares are not discussed as they can only be shared by specifying all IPs which may request access or share with entire subnets. The former would also allow access to individual nodes from outside the cluster and is generally discouraged. The latter could not be implemented either due to resource exhaustion or lack of technical understanding on my side.
 
 The general proceeding is described in [EO-Lab's knowledge base](https://knowledgebase.eo-lab.org/en/latest/s3/How-to-mount-object-storage-container-as-a-file-system-in-Linux-using-s3fs-on-EO-Lab.html). First, three object storage containers are needed:
 
@@ -140,7 +147,8 @@ The general proceeding is described in [EO-Lab's knowledge base](https://knowled
 openstack container create indir outdir workdir
 ```
 
-> :warning: Using three seperate storage buckets may not be the most idiomatic usage strategy or hurt performance. This was not investigated further.
+> [!NOTE]
+> Using three seperate storage buckets may not be the most idiomatic usage strategy or hurt performance. This was not investigated further.
 
 To allow access to these storage buckets or mount them locally, EC2 credentials are needed. Create them by executing the following command. For more detailed instructions, see this [document](https://knowledgebase.eo-lab.org/en/latest/general/How-to-generate-ec2-credentials-on-EO-Lab.html).
 
@@ -197,7 +205,8 @@ s3fs indir wf-inputs -o passwd_file=~/.passwd-s3fs -o url=https://cloud.fra1-1.c
 cp -r /code/auxdata/esa-worldcover-2020/ wf-inputs/
 ```
 
-> :heavy_exclamation_mark: Use S3 bucktes with nextflow by prefixing all paths with `s3://<bucket>`.
+> [!IMPORTANT]
+> Use S3 bucktes with nextflow by prefixing all paths with `s3://<bucket>`.
 
 ## Start a Workflow
 
@@ -266,3 +275,97 @@ kubectl cp default/staging-pod:/output output/
 ```
 
 If AWS S3 buckets are used instead of volumes, mount the respective bucket locally using `s3fs` as described above or access the files via the S3 API. **Alternatively, you can specify a local directory!** Thus, starting the workflow from outside the cluster would automatically download all results to your machine.
+
+
+## Running CUDA applications in Code-DE
+
+To run CUDA application in Code-DE, follow these steps:
+
+#### Create cluster with GPU support
+
+When creating a cluster in Code-DE, make sure to select the correct template, i.e. `k8s-1.23.16-vgpu-v1.0.0`. As a flavour of the worker node(s), select one that has a gpu, e.g. `vm.a6000.1`. The rest of the settings you can choose as you wish.
+
+Create the cluster. (It may take a while. If it fails, retry. Check also that enough GPUs are available.)
+
+#### Check the availability of the nvidia plugin
+
+Get the nodes with
+
+```
+kubectl get nodes
+```
+
+which will give you an output like this
+```
+NAME                                 STATUS   ROLES    AGE   VERSION
+test-gpu-k8s-iqg4yblk2m55-master-0   Ready    master   49m   v1.23.16
+test-gpu-k8s-iqg4yblk2m55-node-0     Ready    <none>   46m   v1.23.16
+
+```
+Check that the `nvidia-device-plugin` is available on the GPU node
+
+```
+kubectl describe node test-gpu-k8s-iqg4yblk2m55-node-0
+```
+If the following lines are present in the output, the plugin is avaliable and the GPUs can be used:
+```
+  Namespace                   Name                                                        CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                        ------------  ----------  ---------------  -------------  ---
+  nvidia-device-plugin        nvidia-device-plugin-gpu-feature-discovery-wnnhp            0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  nvidia-device-plugin        nvidia-device-plugin-node-feature-discovery-worker-v8t9x    0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  nvidia-device-plugin        nvidia-device-plugin-xhqf7                                  0 (0%)        0 (0%)      0 (0%)           0 (0%)         48m
+  
+  
+  Resource           Requests    Limits
+  --------           --------    ------
+  nvidia.com/gpu     0           0
+```
+
+#### Check for taints
+
+Check for taints on the nodes, especially on the GPU node:
+
+```
+kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints
+```
+
+This will give you a list of taints, for example:
+```
+NAME                                 TAINTS
+test-gpu-k8s-iqg4yblk2m55-master-0   [map[effect:NoSchedule key:node-role.kubernetes.io/master]]
+test-gpu-k8s-iqg4yblk2m55-node-0     [map[effect:NoSchedule key:node.cloudferro.com/type value:gpu]]
+```
+
+If the taints are present, i.e. you don't get an empty list, you have to add tolerations in the config file for your script, otherwise your GPU application will not run:
+
+**Example mainfest:** `gpu-load-deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-load-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-load
+  template:
+    metadata:
+      labels:
+        app: gpu-load
+    spec:
+      containers:
+      - name: gpu-load
+        image: <username>/gpu-load:latest
+        resources:
+          limits:
+            nvidia.com/gpu: 1 # Request one GPU
+          requests:
+            nvidia.com/gpu: 1
+      tolerations:
+        - key: "node.cloudferro.com/type"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+```
